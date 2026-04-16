@@ -53,7 +53,9 @@ If a compile error references one of these, **prefer deleting the caller** over 
 - **`TUniquePtr` does NOT inherit from `std::unique_ptr`** (`src/Shim/Templates/UniquePtr.h`). It holds a raw pointer plus a function-pointer deleter bound only at `Reset()` / construction. This lets `TUniquePtr<IncompleteT>` appear as a default-initialized class member — UE patterns rely on this, and `std::unique_ptr`'s destructor would static_assert a complete type. Don't "simplify" it back.
 - **`HAL/` is uppercase.** Linux FS is case-sensitive; UE headers include `HAL/Platform.h`. Don't rename to `Hal/`.
 - **`FMemory` uses `posix_memalign` / `std::malloc`** — Linux-only. No `_aligned_malloc`.
-- **`FMarchingCubes` and `ExactPredicatesInit()` in `UECompat.h` are stubs.** NavACD's real marching-cubes path is `GeometryCore/Public/Generators/MarchingCubes.h`, not the shim stub. Shewchuk degrades to double-precision fallback — acceptable at NavACD tolerances.
+- **NavACD's negative-space sampler uses the real `FMarchingCubes`.** `ConvexDecomposition3.cpp` constructs `FMarchingCubes` to mesh the empty region inside the convex hull but outside the source mesh; sphere samples in that region drive the split decisions. If that meshing silently no-ops, every input collapses to a single hull. The real class lives at `GeometryCore/Public/Generators/MarchingCubes.h` and its `.cpp` lookup tables must be in `GEOMCORE_SOURCES`. Do not re-add a shim stub for it.
+- **`ExactPredicatesInit()` in `UECompat.h` is a stub.** Shewchuk degrades to double-precision fallback — acceptable at NavACD tolerances.
+- **`FCriticalSection` is movable (composition, not inheritance).** It holds a `unique_ptr<std::mutex>` so that `TArray<FCriticalSection>` / `std::vector<FCriticalSection>` can instantiate `resize`/`reserve` (`std::mutex` itself is neither copyable nor movable). MarchingCubes relies on this.
 
 ## Where to add code
 

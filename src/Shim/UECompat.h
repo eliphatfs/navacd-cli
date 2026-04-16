@@ -103,13 +103,26 @@ namespace HAL
 	// Empty namespace for HAL compatibility
 }
 
-// FCriticalSection - wrapper around std::mutex with UE-style Lock/Unlock
-class FCriticalSection : public std::mutex
+// FCriticalSection - wrapper around std::mutex with UE-style Lock/Unlock.
+// Uses pointer-to-mutex so that the type is movable (std::mutex itself is
+// neither copyable nor movable, which prevents TArray<FCriticalSection> /
+// std::vector<FCriticalSection> from instantiating resize/reserve).
+class FCriticalSection
 {
 public:
-	using std::mutex::mutex;
-	void Lock() { lock(); }
-	void Unlock() { unlock(); }
+	FCriticalSection() : M(std::make_unique<std::mutex>()) {}
+	FCriticalSection(FCriticalSection&&) = default;
+	FCriticalSection& operator=(FCriticalSection&&) = default;
+	FCriticalSection(const FCriticalSection&) = delete;
+	FCriticalSection& operator=(const FCriticalSection&) = delete;
+
+	void Lock()       { M->lock(); }
+	void Unlock()     { M->unlock(); }
+	void lock()       { M->lock(); }
+	void unlock()     { M->unlock(); }
+	bool try_lock()   { return M->try_lock(); }
+private:
+	std::unique_ptr<std::mutex> M;
 };
 
 // FScopeLock - UE takes a pointer to FCriticalSection, unlike std::lock_guard which takes a reference
@@ -545,26 +558,6 @@ DEFINE_LOG_CATEGORY(LogGeometry)
 // Signal that TFunctionRef is provided by our shim
 #define NAVACD_TFUNCTIONREF_PROVIDED
 
-// ========================================================================
-// FMarchingCubes stub - NavACD does not exercise the marching-cubes path
-// (it's only used for optional negative-space sampling).  The stub provides
-// the member surface ConvexDecomposition3.cpp touches; Generate() is a no-op
-// so the resulting mesh is empty and downstream code skips negative space.
-// ========================================================================
-namespace UE { namespace Geometry {
-// Stub FMeshShapeGenerator base (forward-declared in DynamicMesh/DynamicMesh3.h)
-class FMeshShapeGenerator
-{
-public:
-	virtual ~FMeshShapeGenerator() = default;
-};
-
-enum class ERootfindingModes { SingleLerp, LerpSteps, Bisection };
-
-// FMarchingCubes stub is defined after BoxTypes.h at the bottom of this header.
-class FMarchingCubes;
-}} // namespace UE::Geometry
-
 // Add TArrayView and other container types to UE::Geometry namespace
 // (can't do this in Types.h because they're defined in Containers.h)
 namespace UE { namespace Geometry {
@@ -579,9 +572,8 @@ using ::TArrayView;
 #include "FTransformMatrixInterop.h"
 
 // BoxTypes.h provides UE::Geometry::FAxisAlignedBox3d (= TAxisAlignedBox3<double>)
-// which is used by the FMarchingCubes stub (defined below) and by a lot of the
-// ported GeometryCore sources.  It also transitively pulls TransformTypes.h which
-// defines UE::Geometry::FTransformSRT3d (= TTransformSRT3<double>).
+// used throughout the ported GeometryCore sources.  It also transitively pulls
+// TransformTypes.h which defines UE::Geometry::FTransformSRT3d (= TTransformSRT3<double>).
 #include "../GeometryCore/Public/BoxTypes.h"
 
 // Re-expose UE::Geometry's transform typedefs at global scope so that the
@@ -590,29 +582,3 @@ using ::TArrayView;
 using FTransformSRT3d = UE::Geometry::FTransformSRT3d;
 using FTransformSRT3f = UE::Geometry::FTransformSRT3f;
 
-// FMarchingCubes stub definition — ConvexDecomposition3.cpp references this
-// class directly (reads/writes Bounds, CubeSize, etc.), so we provide a
-// minimal inert implementation.  The NavACD convex-decomposition pipeline
-// does not exercise the marching-cubes surface generator.
-namespace UE { namespace Geometry {
-class FMarchingCubes : public FMeshShapeGenerator
-{
-public:
-	TFunction<double(FVector3d)> Implicit;
-	double IsoValue = 0;
-	FAxisAlignedBox3d Bounds;
-	double CubeSize = 0.1;
-	bool bParallelCompute = true;
-	ERootfindingModes RootMode = ERootfindingModes::Bisection;
-	int32 RootModeSteps = 5;
-
-	// Mesh output fields (kept empty in the stub)
-	TArray<FVector3d> Vertices;
-	TArray<FIndex3i> Triangles;
-	TArray<FVector3d> Normals;
-
-	void Generate() {}
-	template<typename SeedsType>
-	void GenerateContinuation(const SeedsType&) {}
-};
-}} // namespace UE::Geometry

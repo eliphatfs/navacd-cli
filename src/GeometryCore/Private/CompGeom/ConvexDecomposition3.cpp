@@ -17,6 +17,7 @@
 #include "Spatial/FastWinding.h"
 #include "Spatial/SparseDynamicOctree3.h"
 #include "Implicit/Morphology.h"
+#include "Generators/MarchingCubes.h"
 
 #include "Async/ParallelFor.h"
 

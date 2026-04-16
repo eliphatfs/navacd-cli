@@ -71,58 +71,11 @@ public:
 
 };
 
-// Specialize the Block Data Buffer for bools by using a bitarray. 
-template <int32 BlockSize_>
-class TBlockData3<bool, BlockSize_> : public TBlockData3Layout<BlockSize_>
-{
-public:
-	typedef TBlockData3Layout<BlockSize_>                       DataLayout;
-	typedef bool                                                ElemType;
-	typedef TInlineAllocator<DataLayout::ElemCount>             AllocatorType;
-	typedef TBitArray<AllocatorType>                            BlockDataBitMask;
-	typedef TConstSetBitIterator<AllocatorType>                 BitArrayConstIterator;
-
-	TBlockData3(const ElemType& Value, const int32 ID)
-		:Id(ID)
-	{
-		Reset(Value);
-	}
-
-	void Reset(const ElemType& Value)
-	{
-		BitArray.Init(Value, DataLayout::ElemCount);
-	}
-
-	FBitReference At(int32 LocalIndex)
-	{
-		checkSlow(LocalIndex < DataLayout::ElemCount);
-		return BitArray[LocalIndex];
-	}
-
-	bool At(int32 LocalIndex) const
-	{
-		checkSlow(LocalIndex < DataLayout::ElemCount);
-		return BitArray[LocalIndex];
-	}
-
-	template <typename FuncType>
-	void ModifyValue(const int32 Index, FuncType Func)
-	{
-		bool Value = BitArray[Index];
-		Func(Value);
-		BitArray[Index] = Value;
-	}
-
-	// bit field operations can correspond to topological operations
-	void TopologyUnion(const TBlockData3<bool, BlockSize_>& OtherBlockData)
-	{
-		const auto& OtherBitArray = OtherBlockData.BitArray;
-		BitArray.CombineWithBitwiseOR(OtherBitArray, EBitwiseOperatorFlags::MaintainSize);
-	}
-
-	int32                        Id;
-	BlockDataBitMask             BitArray;    
-};
+// NavACD standalone: the TBlockData3<bool, ...> specialization relied on UE's
+// TBitArray / FBitReference / TConstSetBitIterator / EBitwiseOperatorFlags,
+// none of which are provided by the shim.  It is never instantiated on this
+// code path (MarchingCubes uses TBlockedDenseGrid3<float> and <int32>), so the
+// specialization is omitted.
 
 
 /**

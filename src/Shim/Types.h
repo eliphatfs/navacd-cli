@@ -282,6 +282,8 @@ struct FVector3i
 	bool operator!=(const FVector3i& V) const { return X!=V.X || Y!=V.Y || Z!=V.Z; }
 	int SizeSquared() const { return X*X + Y*Y + Z*Z; }
 	operator FIntVector() const { return FIntVector(X, Y, Z); }
+	explicit operator FVector3d() const { return FVector3d((double)X, (double)Y, (double)Z); }
+	explicit operator FVector3f() const { return FVector3f((float)X, (float)Y, (float)Z); }
 	explicit FVector3i(const FVector3d& V) : X((int)V.X), Y((int)V.Y), Z((int)V.Z) {}
 	explicit FVector3i(const FVector3f& V) : X((int)V.X), Y((int)V.Y), Z((int)V.Z) {}
 	explicit FVector3i(const FIntVector& V) : X(V.X), Y(V.Y), Z(V.Z) {}
@@ -937,7 +939,8 @@ inline double VectorDotDouble(const FVector3d& A, const FVector3d& B) { return F
 enum class EAllowShrinking
 {
 	Yes,
-	No
+	No,
+	Default = Yes
 };
 
 // TStructOnScope stub

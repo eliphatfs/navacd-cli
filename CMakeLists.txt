@@ -91,11 +91,13 @@ set(GEOMCORE_SOURCES
     src/GeometryCore/Private/DynamicMesh/MeshTransforms.cpp
     src/GeometryCore/Private/DynamicMesh/NonManifoldMappingSupport.cpp
     src/GeometryCore/Private/DynamicMesh/Operations/MergeCoincidentMeshEdges.cpp
+    src/GeometryCore/Private/Generators/MarchingCubes.cpp
     src/GeometryCore/Private/Intersection/IntersectionQueries3.cpp
     # src/GeometryCore/Private/Spatial/SparseDynamicOctree3.cpp  # stripped: header is now a linear-scan stub
     src/GeometryCore/Private/Spatial/PriorityOrderPoints.cpp
     src/GeometryCore/Private/ThirdParty/Shewchuk/Predicates.cpp
     src/GeometryCore/Private/Util/ColorConstants.cpp
+    src/GeometryCore/Private/Util/IndexUtil.cpp
     src/GeometryCore/Private/Util/ProgressCancel.cpp
     src/GeometryCore/Private/Util/SmallListSet.cpp
     src/GeometryCore/Private/Util/UniqueIndexSet.cpp

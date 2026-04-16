@@ -24,6 +24,15 @@ using TInlineAllocator = std::allocator<int>; // Never actually used, just a pla
 template<int32 N>
 using TFixedAllocator = std::allocator<int>; // Never actually used, just a placeholder
 
+// Forward declaration so TArray64 alias below can reference TArray.
+template<typename T, typename AllocatorOrPolicy>
+class TArray;
+
+// TArray64 - UE uses 64-bit indexing here. For our purposes TArray (backed by
+// std::vector) is sufficient; std::vector::size_type is already size_t.
+template<typename T, typename AllocatorOrPolicy = std::allocator<T>>
+using TArray64 = TArray<T, AllocatorOrPolicy>;
+
 // TMemStackAllocator / FDefaultSetAllocator stubs
 class FDefaultSetAllocator {};
 
