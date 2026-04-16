@@ -1,5 +1,6 @@
 #include "NavACD.h"
 #include "CompGeom/ConvexDecomposition3.h"
+#include "CompGeom/ExactPredicates.h"
 #include "DynamicMesh/DynamicMesh3.h"
 #include "Util/ColorConstants.h"
 #include "IO/OBJMeshUtil.h"
@@ -126,12 +127,10 @@ static void WriteDecompOBJ(FConvexDecomposition3& Decomp, const std::string& Pat
 	FileStream.close();
 }
 
-// Initialize the exact predicates (must be called once at startup).
-// In the standalone NavACD build we do not link the Shewchuk exact-predicates
-// library, so this is a no-op.  The protected CompGeom code that uses exact
-// predicates (ConvexHull3) falls back to double-precision orientation tests,
-// which is sufficient for the convex-decomposition pipeline.
-void ExactPredicatesInit() {}
+void ExactPredicatesInit()
+{
+	UE::Geometry::ExactPredicates::GlobalInit();
+}
 
 int main(int ArgC, char* ArgV[])
 {
