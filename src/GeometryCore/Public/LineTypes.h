@@ -218,9 +218,7 @@ struct TLine3
 
 };
 
-#ifndef NAVACD_SHIM_TYPES_PROVIDED
 typedef TLine3<double> FLine3d;
-#endif
 typedef TLine3<float> FLine3f;
 
 } // end namespace UE::Geometry

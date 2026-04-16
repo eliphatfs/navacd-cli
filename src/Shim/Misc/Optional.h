@@ -25,6 +25,11 @@ public:
 
 	// UE-style GetValue with default
 	T Get(T DefaultValue) const { return this->has_value() ? **this : DefaultValue; }
+
+	// UE-style Reset/Emplace
+	void Reset() { this->reset(); }
+	template<typename... ArgTypes>
+	T& Emplace(ArgTypes&&... Args) { return this->emplace(std::forward<ArgTypes>(Args)...); }
 };
 
 // UE-style helpers

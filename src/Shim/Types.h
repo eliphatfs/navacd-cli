@@ -17,6 +17,9 @@ struct FIndex4i;
 struct FIntVector;
 struct FIntVector3;
 
+// Forward-declare UE::Geometry::TMatrix3 so FTransform3d can return it.
+namespace UE { namespace Geometry { template <typename RealType> struct TMatrix3; } }
+
 // ========================================================================
 // UE::Math namespace - primary vector/quaternion/transform templates
 // In UE, FVector3d = UE::Math::TVector<double>, FVector3f = UE::Math::TVector<float>, etc.
@@ -48,10 +51,15 @@ struct TVector2
 	void Normalize(T Tolerance = (T)1e-4) { T S = Size(); if (S > Tolerance) { X/=S; Y/=S; } }
 	TVector2 GetNormalized(T Tolerance = (T)1e-4) const { TVector2 R = *this; R.Normalize(Tolerance); return R; }
 	bool IsNearlyZero(T Tolerance = (T)1e-8) const { return SizeSquared() < Tolerance*Tolerance; }
+	T Length() const { return Size(); }
+	T SquaredLength() const { return SizeSquared(); }
 	T Dot(const TVector2& V) const { return X*V.X + Y*V.Y; }
 	static T DotProduct(const TVector2& A, const TVector2& B) { return A.X*B.X + A.Y*B.Y; }
+	static T DistSquared(const TVector2& A, const TVector2& B) { return (A - B).SizeSquared(); }
 	static TVector2 Zero() { return TVector2((T)0, (T)0); }
 	static TVector2 One() { return TVector2((T)1, (T)1); }
+	static TVector2 UnitX() { return TVector2((T)1, (T)0); }
+	static TVector2 UnitY() { return TVector2((T)0, (T)1); }
 	friend TVector2 operator*(T S, const TVector2& V) { return V * S; }
 };
 
@@ -70,6 +78,9 @@ struct TVector
 	TVector operator-() const { return TVector(-X, -Y, -Z); }
 	TVector operator+(const TVector& V) const { return TVector(X+V.X, Y+V.Y, Z+V.Z); }
 	TVector operator-(const TVector& V) const { return TVector(X-V.X, Y-V.Y, Z-V.Z); }
+	// Uniform scalar add / subtract (UE supports V + double)
+	TVector operator+(T S) const { return TVector(X+S, Y+S, Z+S); }
+	TVector operator-(T S) const { return TVector(X-S, Y-S, Z-S); }
 	TVector operator*(T S) const { return TVector(X*S, Y*S, Z*S); }
 	TVector operator/(T S) const { return TVector(X/S, Y/S, Z/S); }
 	TVector operator*(const TVector& V) const { return TVector(X*V.X, Y*V.Y, Z*V.Z); }
@@ -83,8 +94,9 @@ struct TVector
 	bool operator!=(const TVector& V) const { return X!=V.X || Y!=V.Y || Z!=V.Z; }
 	T SizeSquared() const { return X*X + Y*Y + Z*Z; }
 	T Size() const { return std::sqrt(SizeSquared()); }
+	T SquaredLength() const { return SizeSquared(); }
 	T Length() const { return Size(); }
-	void Normalize(T Tolerance = (T)1e-8) { T S = Size(); if (S > Tolerance) { X/=S; Y/=S; Z/=S; } }
+	bool Normalize(T Tolerance = (T)1e-8) { T S = Size(); if (S > Tolerance) { X/=S; Y/=S; Z/=S; return true; } return false; }
 	TVector GetNormalized(T Tolerance = (T)1e-8) const { TVector R = *this; R.Normalize(Tolerance); return R; }
 	bool IsNormalized() const { return std::abs(SizeSquared() - (T)1) < (T)1e-4; }
 	bool IsNearlyZero(T Tolerance = (T)1e-8) const { return SizeSquared() < Tolerance*Tolerance; }
@@ -95,6 +107,8 @@ struct TVector
 	static TVector CrossProduct(const TVector& A, const TVector& B) { return TVector(A.Y*B.Z-A.Z*B.Y, A.Z*B.X-A.X*B.Z, A.X*B.Y-A.Y*B.X); }
 	static T DistSquared(const TVector& A, const TVector& B) { return (A-B).SizeSquared(); }
 	static T Distance(const TVector& A, const TVector& B) { return std::sqrt(DistSquared(A, B)); }
+	static T Dist(const TVector& A, const TVector& B) { return std::sqrt(DistSquared(A, B)); }
+	bool AllComponentsEqual(T Tolerance = (T)1e-8) const { return std::abs(X - Y) <= Tolerance && std::abs(Y - Z) <= Tolerance; }
 	static TVector Zero() { return TVector((T)0, (T)0, (T)0); }
 	static TVector One() { return TVector((T)1, (T)1, (T)1); }
 	static TVector UnitX() { return TVector((T)1, (T)0, (T)0); }
@@ -195,6 +209,8 @@ struct TTransform
 	static TTransform Identity() { return TTransform(); }
 	TVector<T> TransformPosition(const TVector<T>& P) const { return P * Scale3D + Translation; }
 	TVector<T> TransformVector(const TVector<T>& V) const { return V * Scale3D; }
+	TVector<T> TransformVectorNoScale(const TVector<T>& V) const { return V; }
+	TVector<T> InverseTransformVectorNoScale(const TVector<T>& V) const { return V; }
 	const TVector<T>& GetTranslation() const { return Translation; }
 	const TVector<T>& GetScale3D() const { return Scale3D; }
 };
@@ -224,10 +240,10 @@ using FPlane = UE::Math::TPlane<double>;
 using FPlane3f = UE::Math::TPlane<float>;
 
 // Static member definitions for FVector3d and FVector3f
-inline const FVector3d FVector3d::ZeroVector(0, 0, 0);
-inline const FVector3d FVector3d::OneVector(1, 1, 1);
-inline const FVector3f FVector3f::ZeroVector(0, 0, 0);
-inline const FVector3f FVector3f::OneVector(1, 1, 1);
+template<> inline const UE::Math::TVector<double> UE::Math::TVector<double>::ZeroVector(0, 0, 0);
+template<> inline const UE::Math::TVector<double> UE::Math::TVector<double>::OneVector(1, 1, 1);
+template<> inline const UE::Math::TVector<float> UE::Math::TVector<float>::ZeroVector(0, 0, 0);
+template<> inline const UE::Math::TVector<float> UE::Math::TVector<float>::OneVector(1, 1, 1);
 
 // ========================================================================
 // FIntVector, FIntVector3 - needed early for FVector3i and FIndex3i conversions
@@ -375,6 +391,12 @@ struct FIndex2i
 	constexpr bool operator!=(const FIndex2i& O) const { return A!=O.A || B!=O.B; }
 	void Swap() { int32 T = A; A = B; B = T; }
 	void Sort() { if (A > B) Swap(); }
+	bool Contains(int32 V) const { return A == V || B == V; }
+	int32 IndexOf(int32 V) const { return (A == V) ? 0 : ((B == V) ? 1 : -1); }
+	// Given one of the two stored values, return the other.
+	int32 OtherElement(int32 V) const { return (A == V) ? B : A; }
+	static constexpr FIndex2i Zero() { return FIndex2i(0, 0); }
+	static constexpr FIndex2i Invalid() { return FIndex2i(-1, -1); }
 };
 
 struct FIndex3i
@@ -387,6 +409,22 @@ struct FIndex3i
 	constexpr bool operator==(const FIndex3i& O) const { return A==O.A && B==O.B && C==O.C; }
 	constexpr bool operator!=(const FIndex3i& O) const { return A!=O.A || B!=O.B || C!=O.C; }
 	operator FIntVector() const { return FIntVector(A, B, C); }
+	static constexpr FIndex3i Zero() { return FIndex3i(0, 0, 0); }
+	static constexpr FIndex3i Invalid() { return FIndex3i(-1, -1, -1); }
+	bool Contains(int32 V) const { return A == V || B == V || C == V; }
+	int32 IndexOf(int32 V) const {
+		if (A == V) return 0; if (B == V) return 1; if (C == V) return 2; return -1;
+	}
+	// Cycle indices so element NewStart becomes the first element
+	FIndex3i GetCycled(int32 NewStart) const
+	{
+		switch (NewStart % 3)
+		{
+			case 0: return FIndex3i(A, B, C);
+			case 1: return FIndex3i(B, C, A);
+			default: return FIndex3i(C, A, B);
+		}
+	}
 };
 
 struct FIndex4i
@@ -397,6 +435,12 @@ struct FIndex4i
 	int32& operator[](int Idx) { return (&A)[Idx]; }
 	const int32& operator[](int Idx) const { return (&A)[Idx]; }
 	bool operator==(const FIndex4i& O) const { return A==O.A && B==O.B && C==O.C && D==O.D; }
+	static FIndex4i Zero() { return FIndex4i(0, 0, 0, 0); }
+	static FIndex4i Invalid() { return FIndex4i(-1, -1, -1, -1); }
+	bool Contains(int32 V) const { return A == V || B == V || C == V || D == V; }
+	int32 IndexOf(int32 V) const {
+		if (A == V) return 0; if (B == V) return 1; if (C == V) return 2; if (D == V) return 3; return -1;
+	}
 };
 
 // Signal to IndexTypes.h that we've already defined these types
@@ -411,76 +455,10 @@ namespace IndexConstants
 // FIntVector/FIntVector3 defined earlier in the file
 
 // ========================================================================
-// FAxisAlignedBox3d
+// FAxisAlignedBox3d — provided by UE::Geometry's BoxTypes.h (typedef of
+// TAxisAlignedBox3<double>).  Global-scope usage relies on the UE::Geometry
+// typedef being brought in via `using namespace UE::Geometry;`.
 // ========================================================================
-struct FAxisAlignedBox3d
-{
-	FVector3d Min, Max;
-
-	static FAxisAlignedBox3d Empty() { FAxisAlignedBox3d B; return B; }
-
-	FAxisAlignedBox3d() : Min(1e30, 1e30, 1e30), Max(-1e30, -1e30, -1e30) {}
-	FAxisAlignedBox3d(const FVector3d& InMin, const FVector3d& InMax) : Min(InMin), Max(InMax) {}
-	FAxisAlignedBox3d(double MinX, double MinY, double MinZ, double MaxX, double MaxY, double MaxZ)
-		: Min(MinX, MinY, MinZ), Max(MaxX, MaxY, MaxZ) {}
-
-	bool IsValid() const { return Min.X <= Max.X; }
-	FVector3d Center() const { return (Min + Max) * 0.5; }
-	FVector3d Diagonal() const { return Max - Min; }
-	double Width() const { return Max.X - Min.X; }
-	double Height() const { return Max.Y - Min.Y; }
-	double Depth() const { return Max.Z - Min.Z; }
-	double MaxDim() const { return std::max({Width(), Height(), Depth()}); }
-	double Volume() const { return Width() * Height() * Depth(); }
-	double SurfaceArea() const { FVector3d D = Diagonal(); return 2.0*(D.X*D.Y + D.X*D.Z + D.Y*D.Z); }
-
-	bool Contains(const FVector3d& P) const { return P.X>=Min.X && P.X<=Max.X && P.Y>=Min.Y && P.Y<=Max.Y && P.Z>=Min.Z && P.Z<=Max.Z; }
-	bool Contains(const FAxisAlignedBox3d& O) const { return Min.X<=O.Min.X && Max.X>=O.Max.X && Min.Y<=O.Min.Y && Max.Y>=O.Max.Y && Min.Z<=O.Min.Z && Max.Z>=O.Max.Z; }
-
-	double DistanceSquared(const FVector3d& P) const
-	{
-		double DX = std::max({0.0, Min.X - P.X, P.X - Max.X});
-		double DY = std::max({0.0, Min.Y - P.Y, P.Y - Max.Y});
-		double DZ = std::max({0.0, Min.Z - P.Z, P.Z - Max.Z});
-		return DX*DX + DY*DY + DZ*DZ;
-	}
-
-	FAxisAlignedBox3d& operator+=(const FVector3d& P)
-	{
-		if (P.X < Min.X) Min.X = P.X; if (P.X > Max.X) Max.X = P.X;
-		if (P.Y < Min.Y) Min.Y = P.Y; if (P.Y > Max.Y) Max.Y = P.Y;
-		if (P.Z < Min.Z) Min.Z = P.Z; if (P.Z > Max.Z) Max.Z = P.Z;
-		return *this;
-	}
-
-	FAxisAlignedBox3d operator+(const FVector3d& P) const { FAxisAlignedBox3d R = *this; R += P; return R; }
-
-	FAxisAlignedBox3d& operator+=(const FAxisAlignedBox3d& O)
-	{
-		if (O.Min.X < Min.X) Min.X = O.Min.X; if (O.Max.X > Max.X) Max.X = O.Max.X;
-		if (O.Min.Y < Min.Y) Min.Y = O.Min.Y; if (O.Max.Y > Max.Y) Max.Y = O.Max.Y;
-		if (O.Min.Z < Min.Z) Min.Z = O.Min.Z; if (O.Max.Z > Max.Z) Max.Z = O.Max.Z;
-		return *this;
-	}
-
-	FAxisAlignedBox3d Intersect(const FAxisAlignedBox3d& O) const
-	{
-		FVector3d NewMin(std::max(Min.X, O.Min.X), std::max(Min.Y, O.Min.Y), std::max(Min.Z, O.Min.Z));
-		FVector3d NewMax(std::min(Max.X, O.Max.X), std::min(Max.Y, O.Max.Y), std::min(Max.Z, O.Max.Z));
-		return FAxisAlignedBox3d(NewMin, NewMax);
-	}
-
-	FAxisAlignedBox3d Expand(double D) const { return FAxisAlignedBox3d(Min - FVector3d(D), Max + FVector3d(D)); }
-t	void Contain(const FVector3d& P) { *this += P; }
-		void Contain(const FAxisAlignedBox3d& O) { *this += O; }
-
-	bool Intersects(const FAxisAlignedBox3d& O) const
-	{
-		return (Min.X <= O.Max.X && Max.X >= O.Min.X &&
-				Min.Y <= O.Max.Y && Max.Y >= O.Min.Y &&
-				Min.Z <= O.Max.Z && Max.Z >= O.Min.Z);
-	}
-};
 
 // ========================================================================
 // FPlane3d
@@ -494,8 +472,27 @@ struct FPlane3d
 	FPlane3d(const FVector3d& InNormal, double InConstant) : Normal(InNormal.GetNormalized()), Constant(InConstant) {}
 	FPlane3d(double InX, double InY, double InZ, double InW) : Normal(InX, InY, InZ), Constant(InW) { Normal.Normalize(); }
 	FPlane3d(const FVector3d& InNormal, const FVector3d& InPoint) : Normal(InNormal.GetNormalized()), Constant(FVector3d::DotProduct(Normal, InPoint)) {}
+	// Plane from three points (CCW winding -> normal points to the "outside")
+	FPlane3d(const FVector3d& A, const FVector3d& B, const FVector3d& C)
+	{
+		FVector3d N = (B - A).Cross(C - A);
+		N.Normalize();
+		Normal = N;
+		Constant = FVector3d::DotProduct(Normal, A);
+	}
 
 	double DistanceTo(const FVector3d& P) const { return FVector3d::DotProduct(Normal, P) - Constant; }
+	// Transform plane by an FTransform-like type (has TransformPosition / TransformVector).
+	template<typename TransformType>
+	void Transform(const TransformType& Xf)
+	{
+		FVector3d PointOnPlane = Normal * Constant;
+		FVector3d XfPoint = Xf.TransformPosition(PointOnPlane);
+		FVector3d XfNormal = Xf.TransformVector(Normal);
+		XfNormal.Normalize();
+		Normal = XfNormal;
+		Constant = FVector3d::DotProduct(Normal, XfPoint);
+	}
 	int WhichSide(const FVector3d& P, double Tolerance = 1e-8) const
 	{
 		double D = DistanceTo(P);
@@ -557,6 +554,9 @@ struct FQuaterniond
 		FVector3d N = Axis.GetNormalized();
 		return FQuaterniond(N.X*S, N.Y*S, N.Z*S, std::cos(HalfAngle));
 	}
+
+	// Rotator() - not used by NavACD convex decomposition path; return default
+	struct FRotator Rotator() const;
 };
 
 // FQuat4d and FQuat4f - UE's math quaternion types
@@ -573,6 +573,19 @@ struct FQuat4f
 // FQuat alias
 using FQuat = FQuat4d;
 
+// FOrientedBox stub - UE core type used only by operator conversions in OrientedBoxTypes.h
+struct FOrientedBox
+{
+	FVector3d Center;
+	FVector3d AxisX;
+	FVector3d AxisY;
+	FVector3d AxisZ;
+	double ExtentX = 0;
+	double ExtentY = 0;
+	double ExtentZ = 0;
+	FOrientedBox() = default;
+};
+
 // FRotator stub - minimal, just enough for Quaternion.h and TransformTypes.h
 struct FRotator
 {
@@ -582,6 +595,9 @@ struct FRotator
 	static FRotator MakeFromEuler(const FVector3d& Euler) { return FRotator(Euler.X, Euler.Y, Euler.Z); }
 	FVector3d Euler() const { return FVector3d(Pitch, Yaw, Roll); }
 };
+
+// Out-of-line Rotator() for FQuaterniond (forward-declared above FRotator)
+inline FRotator FQuaterniond::Rotator() const { return FRotator(); }
 
 // ========================================================================
 // FTransform3d / FTransform3f - UE engine transform types
@@ -596,6 +612,9 @@ struct FTransform3d
 	FTransform3d() : Rotation(), Translation(), Scale3D(1, 1, 1) {}
 	FTransform3d(const FQuat4d& InRotation, const FVector3d& InTranslation, const FVector3d& InScale = FVector3d(1,1,1))
 		: Rotation(InRotation), Translation(InTranslation), Scale3D(InScale) {}
+	// Translation-only constructor (NavACD MeshTransforms::Translate uses this)
+	explicit FTransform3d(const FVector3d& InTranslation)
+		: Rotation(), Translation(InTranslation), Scale3D(1, 1, 1) {}
 
 	const FQuat4d& GetRotation() const { return Rotation; }
 	const FVector3d& GetTranslation() const { return Translation; }
@@ -628,6 +647,24 @@ struct FTransform3d
 
 	static FTransform3d Identity() { return FTransform3d(); }
 	double GetDeterminant() const { return Scale3D.X * Scale3D.Y * Scale3D.Z; }
+
+	// Implicit conversion to UE::Math::TTransform<double> — UE-ported code
+	// (PlaneTypes.h, TransformTypes.h, etc.) uses TTransform<RealType>& as the
+	// parameter type for transform-accepting methods.  The stub TTransform is
+	// value-only (no rotation support), so the conversion drops rotation but
+	// preserves translation and scale.
+	operator UE::Math::TTransform<double>() const
+	{
+		UE::Math::TTransform<double> R;
+		R.Translation = Translation;
+		R.Scale3D = Scale3D;
+		return R;
+	}
+
+	// NavACD stub: negative-space path uses CoveringToLocalSpace *= transform.ToInverseMatrixWithScale().
+	// Return a default-constructed UE::Geometry::TMatrix3<double> (forward-declared at top of this file).
+	// Defined inline so it's emitted only where callers instantiate it AFTER MatrixTypes.h is available.
+	inline UE::Geometry::TMatrix3<double> ToInverseMatrixWithScale() const;
 };
 
 struct FTransform3f
@@ -649,9 +686,11 @@ struct FTransform3f
 using FTransform = FTransform3d;
 
 // ========================================================================
-// FTransformSRT3d - convenience (maps to same as FTransform3d)
+// FTransformSRT3d is provided by UE::Geometry (TTransformSRT3<double>) via
+// TransformTypes.h.  We intentionally do NOT alias it at global scope; the
+// UE::Geometry typedef has a richer API (SetScale(FVector), rotation, etc.)
+// and we want it to be the one visible through `using namespace UE::Geometry`.
 // ========================================================================
-using FTransformSRT3d = FTransform3d;
 
 // ========================================================================
 // FFrame3d
@@ -758,6 +797,24 @@ struct FMatrix3d
 
 	// Row accessors used by Quaternion.h
 	FVector3d Row0, Row1, Row2;
+
+	// FMatrix-style helpers (NavACD: negative-space path is stubbed so
+	// these only need to compile; TransformPosition applies the rotation
+	// portion only which is sufficient to yield *some* FVector3d output).
+	FVector3d TransformPosition(const FVector3d& P) const { return (*this) * P; }
+	FVector3d TransformVector(const FVector3d& V) const { return (*this) * V; }
+
+	FMatrix3d& operator*=(const FMatrix3d& O) { *this = (*this) * O; return *this; }
+
+	// Accept any other matrix-like type (e.g. UE::Geometry::TMatrix3<double>).  The
+	// NavACD negative-space path is stubbed, so this is a no-op that keeps
+	// the caller compiling.
+	template<typename OtherMat,
+		typename = std::enable_if_t<!std::is_same_v<OtherMat, FMatrix3d>>>
+	FMatrix3d& operator*=(const OtherMat& /*O*/)
+	{
+		return *this;
+	}
 };
 
 // ========================================================================
@@ -903,6 +960,21 @@ namespace FMath
 	inline double InvSqrt(double V) { return 1.0 / std::sqrt(V); }
 	template<typename T> inline T Min(const T& A, const T& B) { return std::min(A, B); }
 	template<typename T> inline T Max(const T& A, const T& B) { return std::max(A, B); }
+	// Mixed-type Min/Max: promote both operands to their common type
+	template<typename T1, typename T2,
+	         typename C = typename std::common_type<T1, T2>::type,
+	         typename = std::enable_if_t<!std::is_same<T1, T2>::value>>
+	inline C Min(T1 A, T2 B) { return std::min(static_cast<C>(A), static_cast<C>(B)); }
+	template<typename T1, typename T2,
+	         typename C = typename std::common_type<T1, T2>::type,
+	         typename = std::enable_if_t<!std::is_same<T1, T2>::value>>
+	inline C Max(T1 A, T2 B) { return std::max(static_cast<C>(A), static_cast<C>(B)); }
+	template<typename T> inline T DegreesToRadians(T Deg) { return Deg * (T)(3.14159265358979323846 / 180.0); }
+	template<typename T> inline T RadiansToDegrees(T Rad) { return Rad * (T)(180.0 / 3.14159265358979323846); }
+	inline double Floor(double V) { return std::floor(V); }
+	inline float Floor(float V) { return std::floor(V); }
+	inline double Ceil(double V) { return std::ceil(V); }
+	inline float Ceil(float V) { return std::ceil(V); }
 	template<typename T> inline T Clamp(const T& V, const T& MinV, const T& MaxV) { return std::clamp(V, MinV, MaxV); }
 	template<typename T> inline T Lerp(const T& A, const T& B, double Frac) { return A + (B - A) * Frac; }
 	inline int32 CeilToInt(double V) { return static_cast<int32>(std::ceil(V)); }
@@ -925,7 +997,51 @@ namespace FMath
 	inline double TruncToDouble(double V) { return static_cast<double>(static_cast<int64>(V)); }
 	inline bool IsNearlyZero(double V, double Tolerance = 1e-8) { return std::abs(V) <= Tolerance; }
 	inline bool IsNearlyEqual(double A, double B, double Tolerance = 1e-8) { return std::abs(A - B) <= Tolerance; }
+	template<typename T> inline T Max3(const T& A, const T& B, const T& C) { return std::max(A, std::max(B, C)); }
+	template<typename T> inline T Min3(const T& A, const T& B, const T& C) { return std::min(A, std::min(B, C)); }
+	// Max3Index: index (0/1/2) of the largest of three values.
+	template<typename T> inline int32 Max3Index(const T& A, const T& B, const T& C)
+	{
+		return (A >= B) ? (A >= C ? 0 : 2) : (B >= C ? 1 : 2);
+	}
+	template<typename T> inline int32 Min3Index(const T& A, const T& B, const T& C)
+	{
+		return (A <= B) ? (A <= C ? 0 : 2) : (B <= C ? 1 : 2);
+	}
+	// Mixed-type Clamp: promote all to common type
+	template<typename T1, typename T2, typename T3,
+	         typename C = typename std::common_type<T1, T2, T3>::type,
+	         typename = std::enable_if_t<!(std::is_same<T1, T2>::value && std::is_same<T2, T3>::value)>>
+	inline C Clamp(T1 V, T2 MinV, T3 MaxV)
+	{
+		return std::clamp(static_cast<C>(V), static_cast<C>(MinV), static_cast<C>(MaxV));
+	}
+	inline int32 CeilToInt32(double V) { return static_cast<int32>(std::ceil(V)); }
+	inline int32 CeilToInt32(float V)  { return static_cast<int32>(std::ceil(V)); }
+	inline int32 FloorToInt32(double V) { return static_cast<int32>(std::floor(V)); }
+	inline int32 FloorToInt32(float V)  { return static_cast<int32>(std::floor(V)); }
+	inline int32 RoundToInt32(double V) { return static_cast<int32>(std::round(V)); }
+	inline int32 RoundToInt32(float V)  { return static_cast<int32>(std::round(V)); }
+	inline float Square(float V) { return V * V; }
+	inline double Square(double V) { return V * V; }
 }
+
+// Engine math constants used by MeshQueries.h and other code
+#ifndef BIG_NUMBER
+#define BIG_NUMBER (3.4e+38f)
+#endif
+#ifndef SMALL_NUMBER
+#define SMALL_NUMBER (1.e-8f)
+#endif
+#ifndef KINDA_SMALL_NUMBER
+#define KINDA_SMALL_NUMBER (1.e-4f)
+#endif
+#ifndef DOUBLE_BIG_NUMBER
+#define DOUBLE_BIG_NUMBER (3.4e+38)
+#endif
+#ifndef UE_BIG_NUMBER
+#define UE_BIG_NUMBER BIG_NUMBER
+#endif
 
 // FMathd / FMathf will be provided by the extracted MathUtil.h as typedefs of TMathUtil
 // We cannot define them as namespaces here because MathUtil.h uses typedefs
@@ -953,15 +1069,15 @@ namespace FMathdCompat
 // ========================================================================
 namespace UE { namespace Geometry {
 using ::FFrame3d;
-using ::FTransformSRT3d;
+// FTransformSRT3d intentionally not imported from global — use UE::Geometry's typedef.
 using ::FTransform;
 using ::FTransform3d;
-using ::FMatrix3d;
+// FMatrix3d is defined in UE::Geometry by MatrixTypes.h (typedef TMatrix3<double>)
 // FPlane3d and FAxisAlignedBox3d are defined in PlaneTypes.h and BoxTypes.h
 using ::FSphere;
 using ::FHalfspace3d;
-using ::FLine3d;
-using ::FTriangle3d;
+// FLine3d / FTriangle3d are defined in UE::Geometry by LineTypes.h / TriangleTypes.h
+// (typedef'd from TLine3<double>/TTriangle3<double>); do not alias the global stubs.
 using ::FSegment3d;
 using ::FRay3d;
 using ::FQuaterniond;

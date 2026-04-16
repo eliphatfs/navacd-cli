@@ -346,8 +346,8 @@ namespace UE::MeshFileUtils
 			{
 				for (int32 UI = 0; UI < UVs->ElementCount(); ++UI)
 				{
-					check(UVs->IsElement(UI))
-						FVector2f UV = UVs->GetElement(UI);
+					check(UVs->IsElement(UI));
+					FVector2f UV = UVs->GetElement(UI);
 					UE::Private::MeshFileUtilsLocals::ObjWriteElement<2>(FileStream, "vt", UV);
 				}
 			}

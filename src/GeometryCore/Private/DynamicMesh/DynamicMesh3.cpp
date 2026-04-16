@@ -2,7 +2,9 @@
 
 #include "DynamicMesh/DynamicMesh3.h"
 #include "DynamicMesh/DynamicMeshAttributeSet.h"
-#include "Generators/MeshShapeGenerator.h"
+// NavACD standalone: MeshShapeGenerator is unused by the convex-decomposition
+// pipeline, so we do not include or link MeshShapeGenerator.h.  The two
+// FMeshShapeGenerator entry points on FDynamicMesh3 are stubbed below.
 #include "Templates/UniquePtr.h"
 #include "HAL/IConsoleManager.h"	// required for cvars
 
@@ -133,77 +135,12 @@ const FDynamicMesh3 & FDynamicMesh3::operator=(FDynamicMesh3 && Other)
 	return *this;
 }
 
-FDynamicMesh3::FDynamicMesh3(const FMeshShapeGenerator* Generator)
+// NavACD standalone: FMeshShapeGenerator-based construction is not used.
+FDynamicMesh3::FDynamicMesh3(const FMeshShapeGenerator* /*Generator*/) {}
+
+bool FDynamicMesh3::Copy(const FMeshShapeGenerator* /*Generator*/)
 {
-	Copy(Generator);
-}
-
-bool FDynamicMesh3::Copy(const FMeshShapeGenerator* Generator)
-{
-	Clear();
-
-	EnableTriangleGroups();
-
-	int NumVerts = Generator->Vertices.Num();
-	for (int i = 0; i < NumVerts; ++i)
-	{
-		AppendVertex(Generator->Vertices[i]);
-	}
-
-	int NumTris = Generator->Triangles.Num();
-	if (Generator->HasAttributes())
-	{
-		bool bSuccess = true;
-		// First append all triangles w/out attributes enabled
-		for (int32 TID = 0; TID < NumTris; ++TID)
-		{
-			int PolyID = Generator->TrianglePolygonIDs.Num() > 0 ? 1 + Generator->TrianglePolygonIDs[TID] : 0;
-			int AppendedTID = AppendTriangle(Generator->Triangles[TID], PolyID);
-			bSuccess &= bool(TID == AppendedTID);
-		}
-		// If they were successfully appended, enable and set attributes
-		// (doing this as a post-process is faster)
-		if (ensure(bSuccess))
-		{
-			EnableAttributes();
-			FDynamicMeshUVOverlay* UVOverlay = Attributes()->PrimaryUV();
-			FDynamicMeshNormalOverlay* NormalOverlay = Attributes()->PrimaryNormals();
-			int NumUVs = Generator->UVs.Num();
-			for (int i = 0; i < NumUVs; ++i)
-			{
-				UVOverlay->AppendElement(Generator->UVs[i]);
-			}
-			int NumNormals = Generator->Normals.Num();
-			for (int i = 0; i < NumNormals; ++i)
-			{
-				NormalOverlay->AppendElement(Generator->Normals[i]);
-			}
-
-			for (int i = 0; i < NumTris; ++i)
-			{
-				UVOverlay->SetTriangle(i, Generator->TriangleUVs[i]);
-				NormalOverlay->SetTriangle(i, Generator->TriangleNormals[i]);
-			}
-		}
-	}
-	else if (Generator->TrianglePolygonIDs.Num()) // no attributes, yes polygon ids
-	{
-		for (int i = 0; i < NumTris; ++i)
-		{
-			int tid = AppendTriangle(Generator->Triangles[i], 1 + Generator->TrianglePolygonIDs[i]);
-			ensure(tid == i);
-		}
-	}
-	else // no attribute and no polygon ids
-	{
-		for (int i = 0; i < NumTris; ++i)
-		{
-			int tid = AppendTriangle(Generator->Triangles[i], 0);
-			ensure(tid == i);
-		}
-	}
-
-	return (TriangleCount() == NumTris);
+	return false;
 }
 
 void FDynamicMesh3::Copy(const FDynamicMesh3& copy, bool bNormals, bool bColors, bool bUVs, bool bAttributes)
@@ -1618,6 +1555,7 @@ int FDynamicMesh3::FindEdgeFromTriPair(int TriA, int TriB) const
 
 
 
+#if 0 // NavACD standalone: console debug mesh CVars disabled
 static TAutoConsoleVariable<bool> CVarDynamicMeshDebugMeshesEnabled(
 	TEXT("geometry.DynamicMesh.EnableDebugMeshes"),
 	false,
@@ -1627,6 +1565,7 @@ static FAutoConsoleCommand DynamicMeshClearDebugMeshesCmd(
 	TEXT("geometry.DynamicMesh.ClearDebugMeshes"),
 	TEXT("Discard all debug meshes currently stored in the FDynamicMesh3 Global Debug Mesh set. This command only works in the Editor."),
 	FConsoleCommandDelegate::CreateStatic(UE::Geometry::Debug::ClearAllDebugMeshes) );
+#endif
 
 
 namespace UELocal

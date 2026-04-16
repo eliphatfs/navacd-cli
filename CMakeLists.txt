@@ -76,21 +76,29 @@ set(GEOMCORE_PUBLIC
 # GeometryCore implementation files
 set(GEOMCORE_SOURCES
     src/GeometryCore/Private/CompGeom/ConvexDecomposition3.cpp
+    src/GeometryCore/Private/CompGeom/ConvexHull2.cpp
     src/GeometryCore/Private/CompGeom/ConvexHull3.cpp
     src/GeometryCore/Private/CompGeom/Delaunay2.cpp
     src/GeometryCore/Private/CompGeom/ExactPredicates.cpp
     src/GeometryCore/Private/CompGeom/PolygonTriangulation.cpp
     src/GeometryCore/Private/DynamicMesh/DynamicMesh3.cpp
+    src/GeometryCore/Private/DynamicMesh/DynamicMesh3_Edits.cpp
+    src/GeometryCore/Private/DynamicMesh/DynamicMesh3_Queries.cpp
     src/GeometryCore/Private/DynamicMesh/DynamicMeshAttributeSet.cpp
     src/GeometryCore/Private/DynamicMesh/DynamicMeshOverlay.cpp
+    src/GeometryCore/Private/DynamicMesh/MeshIndexMappings.cpp
     src/GeometryCore/Private/DynamicMesh/MeshNormals.cpp
     src/GeometryCore/Private/DynamicMesh/MeshTransforms.cpp
+    src/GeometryCore/Private/DynamicMesh/NonManifoldMappingSupport.cpp
     src/GeometryCore/Private/DynamicMesh/Operations/MergeCoincidentMeshEdges.cpp
-    src/GeometryCore/Private/Spatial/SparseDynamicOctree3.cpp
+    src/GeometryCore/Private/Intersection/IntersectionQueries3.cpp
+    # src/GeometryCore/Private/Spatial/SparseDynamicOctree3.cpp  # stripped: header is now a linear-scan stub
     src/GeometryCore/Private/Spatial/PriorityOrderPoints.cpp
-    src/GeometryCore/Private/Generators/MarchingCubes.cpp
     src/GeometryCore/Private/ThirdParty/Shewchuk/Predicates.cpp
     src/GeometryCore/Private/Util/ColorConstants.cpp
+    src/GeometryCore/Private/Util/ProgressCancel.cpp
+    src/GeometryCore/Private/Util/SmallListSet.cpp
+    src/GeometryCore/Private/Util/UniqueIndexSet.cpp
 )
 
 # IO sources
@@ -134,7 +142,7 @@ if(MSVC)
     target_compile_options(navacd PRIVATE /FI"${CMAKE_CURRENT_SOURCE_DIR}/src/Shim/UECompat.h")
 else()
     target_compile_options(navacd PRIVATE -Wall -Wno-unused-parameter -Wno-unused-variable -Wno-sign-compare -Wno-class-memaccess -Wno-overloaded-virtual)
-    target_compile_options(navacd PRIVATE -include "${CMAKE_CURRENT_SOURCE_DIR}/src/Shim/UECompat.h")
+    target_compile_options(navacd PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-include${CMAKE_CURRENT_SOURCE_DIR}/src/Shim/UECompat.h>)
 endif()
 
 # Threading support (for future OpenMP)

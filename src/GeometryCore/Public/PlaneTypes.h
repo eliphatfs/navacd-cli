@@ -201,10 +201,8 @@ struct TPlane3
 
 };
 
-#ifndef NAVACD_SHIM_TYPES_PROVIDED
 typedef TPlane3<float> FPlane3f;
 typedef TPlane3<double> FPlane3d;
-#endif
 
 } // end namespace UE::Geometry
 } // end namespace UE

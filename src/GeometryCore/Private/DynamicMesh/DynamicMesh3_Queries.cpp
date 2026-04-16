@@ -69,8 +69,8 @@ int FDynamicMesh3::GetAllVtxBoundaryEdges(int vID, ArrayType& EdgeListOut) const
 	return 0;
 }
 
+// NavACD standalone: FLocalIntArray resolves to TArray<int32> in shim, so only one instantiation is needed
 template GEOMETRYCORE_API int FDynamicMesh3::GetAllVtxBoundaryEdges<TArray<int32>>(int vID, TArray<int32>& EdgeListOut) const;
-template GEOMETRYCORE_API int FDynamicMesh3::GetAllVtxBoundaryEdges<FDynamicMesh3::FLocalIntArray>(int vID, FDynamicMesh3::FLocalIntArray& EdgeListOut) const;
 
 
 void FDynamicMesh3::GetVtxNbrhood(int eID, int vID, int& vOther, int& oppV1, int& oppV2, int& t1, int& t2) const
@@ -173,7 +173,6 @@ EMeshResult FDynamicMesh3::GetVtxTriangles(int vID, ArrayType& TrianglesOut) con
 }
 
 template GEOMETRYCORE_API EMeshResult FDynamicMesh3::GetVtxTriangles<TArray<int32>>(int vID, TArray<int32>& TrianglesOut) const;
-template GEOMETRYCORE_API EMeshResult FDynamicMesh3::GetVtxTriangles<FDynamicMesh3::FLocalIntArray>(int vID, FDynamicMesh3::FLocalIntArray& TrianglesOut) const;
 
 template<typename IntArray, typename BoolArray>
 EMeshResult FDynamicMesh3::GetVtxContiguousTriangles(int VertexID, IntArray& TrianglesOut, IntArray& SpanLengths, BoolArray& IsLoop) const
@@ -291,6 +290,11 @@ EMeshResult FDynamicMesh3::GetVtxContiguousTriangles(int VertexID, IntArray& Tri
 
 template GEOMETRYCORE_API EMeshResult FDynamicMesh3::GetVtxContiguousTriangles<TArray<int32>, TArray<bool>>
 	(int VertexID, TArray<int32>& TrianglesOut, TArray<int32>& SpanLengths, TArray<bool>& IsLoop) const;
+
+// Also instantiate for the FLocalIntArray / FLocalBoolArray typedefs, whose
+// second template argument is a TInlineAllocator stub aliased to
+// std::allocator<int> in the standalone shim — different mangling from the
+// default TArray<T, std::allocator<T>>.
 template GEOMETRYCORE_API EMeshResult FDynamicMesh3::GetVtxContiguousTriangles<FDynamicMesh3::FLocalIntArray, FDynamicMesh3::FLocalBoolArray>
 	(int VertexID, FDynamicMesh3::FLocalIntArray& TrianglesOut, FDynamicMesh3::FLocalIntArray& SpanLengths, FDynamicMesh3::FLocalBoolArray& IsLoop) const;
 
@@ -493,7 +497,6 @@ bool FDynamicMesh3::GetAllVertexGroups(int vID, ArrayType& GroupsOut) const
 }
 
 template GEOMETRYCORE_API bool FDynamicMesh3::GetAllVertexGroups<TArray<int32>>(int vID, TArray<int32>& GroupsOut) const;
-template GEOMETRYCORE_API bool FDynamicMesh3::GetAllVertexGroups<FDynamicMesh3::FLocalIntArray>(int vID, FDynamicMesh3::FLocalIntArray& GroupsOut) const;
 
 
 

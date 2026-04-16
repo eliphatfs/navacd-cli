@@ -882,9 +882,7 @@ struct TAxisAlignedBox2
 typedef TAxisAlignedBox2<float> FAxisAlignedBox2f;
 typedef TAxisAlignedBox2<double> FAxisAlignedBox2d;
 typedef TAxisAlignedBox3<float> FAxisAlignedBox3f;
-#ifndef NAVACD_SHIM_TYPES_PROVIDED
 typedef TAxisAlignedBox3<double> FAxisAlignedBox3d;
-#endif
 
 } // end namespace UE::Geometry
 } // end namespace UE

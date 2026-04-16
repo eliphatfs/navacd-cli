@@ -6,3 +6,5 @@ build/
 *.lib
 .vs/
 out/
+UnrealEngine-ue5-main/
+UnrealEngine-ue5-main.zip

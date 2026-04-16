@@ -20,7 +20,8 @@ namespace Geometry
 	 * @param TriangleIDs list of triangle IDs of Mesh
 	 * @param VertexIDsOut list of vertices contained by triangles
 	 */
-	GEOMETRYCORE_API void TriangleToVertexIDs(const FDynamicMesh3* Mesh, TConstArrayView<int> TriangleIDs, TArray<int>& VertexIDsOut);
+	// NavACD: inline-defined below (MeshIndexUtil.cpp is not ported).
+	void TriangleToVertexIDs(const FDynamicMesh3* Mesh, TConstArrayView<int> TriangleIDs, TArray<int>& VertexIDsOut);
 
 
 	/**
@@ -160,6 +161,30 @@ FIndex3i FindNextAdjacentTriangleAroundVtx(const FDynamicMesh3* Mesh,
 }
 
 
+
+// NavACD: MeshIndexUtil.cpp is not ported; provide inline implementations for
+// the few helpers the extracted code actually links against.
+inline void TriangleToVertexIDs(const FDynamicMesh3* Mesh, TConstArrayView<int> TriangleIDs, TArray<int>& VertexIDsOut)
+{
+	TSet<int> Unique;
+	Unique.Reserve(TriangleIDs.Num() * 3);
+	for (int TID : TriangleIDs)
+	{
+		if (Mesh->IsTriangle(TID))
+		{
+			FIndex3i Tri = Mesh->GetTriangle(TID);
+			Unique.Add(Tri.A);
+			Unique.Add(Tri.B);
+			Unique.Add(Tri.C);
+		}
+	}
+	VertexIDsOut.Reset();
+	VertexIDsOut.Reserve(Unique.Num());
+	for (int V : Unique)
+	{
+		VertexIDsOut.Add(V);
+	}
+}
 
 template<typename OverlayType, typename EnumeratorType, typename OutputSetType>
 void TrianglesToOverlayElements(const OverlayType* Overlay, EnumeratorType TriangleEnumeration, OutputSetType& ElementsOut)

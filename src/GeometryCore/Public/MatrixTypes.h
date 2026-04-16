@@ -41,7 +41,7 @@ struct TMatrix3
 	 * Construct outer-product of U*transpose(V) of U and V
 	 * result is that Mij = u_i * v_j
 	 */
-	TMatrix3<RealType>(const UE::Math::TVector<RealType>& U, const UE::Math::TVector<RealType>& V)
+	TMatrix3(const UE::Math::TVector<RealType>& U, const UE::Math::TVector<RealType>& V)
 		: Row0(U.X * V.X, U.X * V.Y, U.X * V.Z),
 		  Row1(U.Y * V.X, U.Y * V.Y, U.Y * V.Z),
 		  Row2(U.Z * V.X, U.Z * V.Y, U.Z * V.Z)
@@ -303,7 +303,7 @@ struct TMatrix2
 	 * Construct outer-product of U*transpose(V) of U and V
 	 * result is that Mij = u_i * v_j
 	 */
-	TMatrix2<RealType>(const TVector2<RealType>& U, const TVector2<RealType>& V)
+	TMatrix2(const TVector2<RealType>& U, const TVector2<RealType>& V)
 		: Row0(U.X * V.X, U.X * V.Y),
 		  Row1(U.Y * V.X, U.Y * V.Y)
 	{
@@ -507,9 +507,7 @@ inline static TMatrix3<RealType> CrossProductMatrix(const UE::Math::TVector<Real
 
 
 typedef TMatrix3<float> FMatrix3f;
-#ifndef NAVACD_SHIM_TYPES_PROVIDED
 typedef TMatrix3<double> FMatrix3d;
-#endif
 typedef TMatrix2<float> FMatrix2f;
 typedef TMatrix2<double> FMatrix2d;
 

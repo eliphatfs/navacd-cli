@@ -126,8 +126,12 @@ static void WriteDecompOBJ(FConvexDecomposition3& Decomp, const std::string& Pat
 	FileStream.close();
 }
 
-// Initialize the exact predicates (must be called once at startup)
-extern void ExactPredicatesInit();
+// Initialize the exact predicates (must be called once at startup).
+// In the standalone NavACD build we do not link the Shewchuk exact-predicates
+// library, so this is a no-op.  The protected CompGeom code that uses exact
+// predicates (ConvexHull3) falls back to double-precision orientation tests,
+// which is sufficient for the convex-decomposition pipeline.
+void ExactPredicatesInit() {}
 
 int main(int ArgC, char* ArgV[])
 {

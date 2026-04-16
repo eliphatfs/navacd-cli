@@ -27,6 +27,9 @@ public:
 
 	void CountBytes(SIZE_T, SIZE_T) {}
 
+	void SetError() {}
+	bool IsError() const { return false; }
+
 	template<typename T>
 	void SerializeCompressedNew(T*, int64, const char*, const char*, int)
 	{
@@ -51,8 +54,8 @@ inline FArchive& operator<<(FArchive& Ar, FIndex4i&) { return Ar; }
 // Stubs for serialization version types referenced by DynamicVector.h, RefCountVector.h, etc.
 struct FUE5MainStreamObjectVersion
 {
-	static const int32 GUID = 0;  // Stub GUID used with UsingCustomVersion/CustomVer
-	static const int32 Type = 0;
+	static inline const int32 GUID = 0;  // Stub GUID used with UsingCustomVersion/CustomVer
+	static inline const int32 Type = 0;
 
 	// Version enum values referenced by extracted code
 	enum

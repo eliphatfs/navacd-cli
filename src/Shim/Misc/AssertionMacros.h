@@ -10,6 +10,10 @@
 #define check(Expression) assert(Expression)
 #define checkf(Expression, Format, ...) assert(Expression)
 #define checkSlow(Expression) // Disabled in standalone; was only for debug builds in UE
+#define checkfSlow(Expression, Format, ...) // Disabled in standalone
+#define verify(Expression) assert(Expression)
+#define verifyf(Expression, Format, ...) assert(Expression)
+#define verifySlow(Expression) // Disabled in standalone
 #define checkNoEntry() assert(!"checkNoEntry: Should never reach this code path")
 #define checkNoReentry() // Not easily mapped; skip
 #define checkNoRecursion() // Not easily mapped; skip

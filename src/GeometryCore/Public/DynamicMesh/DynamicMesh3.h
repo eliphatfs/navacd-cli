@@ -357,21 +357,7 @@ public:
 	 */
 	GEOMETRYCORE_API void EnableMatchingAttributes(const FDynamicMesh3& ToMatch, bool bClearExisting = true, bool bDiscardExtraAttributes = false);
 
-	/**
-	 * Serialization operator for FDynamicMesh3.
-	 *
-	 * @param Ar Archive to serialize with.
-	 * @param Mesh Mesh to serialize.
-	 * @returns Passing down serializing archive.
-	 */
-	friend FArchive& operator<<(FArchive& Ar, FDynamicMesh3& Mesh)
-	{
-		Mesh.Serialize(Ar);
-		return Ar;
-	}
-
-	/** Serialize the mesh to an archive. */
-	GEOMETRYCORE_API void Serialize(FArchive& Ar);
+	// NavACD standalone: FDynamicMesh3 serialization is stripped (see DynamicMesh3_Serialization.cpp, excluded).
 
 public:
 	/** @return number of vertices in the mesh */
@@ -1896,14 +1882,6 @@ protected:
 
 
 	GEOMETRYCORE_API void ReverseTriOrientationInternal(int TriangleID);
-
-	/**
-	* Internal implementations for serialization to allow for better code separation between different versions and other implementation details.
-	* @tparam Variant Identifier for a specific implementation, e.g. depending on the version and/or specific options.
-	* @param Ptr Pointer to optional data, e.g. version specific options.
-	*/
-	template<int Variant>
-	void SerializeInternal(FArchive& Ar, void* Ptr);
 
 	/* We keep this version of CanCollapseEdge internal because the CollapseInfo struct may only be partially filled out by the function */
 	GEOMETRYCORE_API virtual EMeshResult CanCollapseEdgeInternal(int vKeep, int vRemove, double collapse_t, FEdgeCollapseInfo* OutCollapseInfo) const;

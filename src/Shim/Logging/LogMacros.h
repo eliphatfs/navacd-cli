@@ -17,8 +17,10 @@ struct FLogCategoryBase
 #define DECLARE_LOG_CATEGORY_EXTERN(CategoryName, DefaultVerbosity, CompileTimeVerbosity) \
 	extern FLogCategoryBase CategoryName;
 
+// DEFINE_LOG_CATEGORY: marked inline so that force-include'ing this via
+// UECompat.h does not produce a "multiple definition" link error.
 #define DEFINE_LOG_CATEGORY(CategoryName) \
-	FLogCategoryBase CategoryName(#CategoryName);
+	inline FLogCategoryBase CategoryName(#CategoryName);
 
 // UE_LOGF replacement - prints to stderr
 #define UE_LOGF(CategoryName, Verbosity, Format, ...) \

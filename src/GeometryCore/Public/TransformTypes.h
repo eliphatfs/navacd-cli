@@ -419,9 +419,7 @@ public:
 	}
 };
 typedef TTransformSRT3<float> FTransformSRT3f;
-#ifndef NAVACD_SHIM_TYPES_PROVIDED
 typedef TTransformSRT3<double> FTransformSRT3d;
-#endif
 
 
 } // end namespace UE::Geometry

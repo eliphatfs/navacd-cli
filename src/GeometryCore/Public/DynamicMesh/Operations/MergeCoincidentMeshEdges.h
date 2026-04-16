@@ -7,7 +7,6 @@
 #include "Math/UnrealMathSSE.h"
 #include "MathUtil.h"
 #include "VectorTypes.h"
-#include "SplitAttributeWelder.h"
 
 namespace UE
 {
@@ -53,12 +52,9 @@ public:
 	/** Number of mesh boundary edges after merging */
 	int32 FinalNumBoundaryEdges = 0;
 
-	/** Enable / Disable attribute welding along merged mesh edges */
+	/** Enable / Disable attribute welding along merged mesh edges (no-op in NavACD standalone) */
 	bool bWeldAttrsOnMergedEdges = false;
 
-	/** Used to weld attributes at the merged edges */
-	FSplitAttributeWelder  SplitAttributeWelder;
-	
 	/** Set of EdgesIds to merge. If null, perform merge operation across entire mesh */
 	TSet<int32>* EdgesToMerge = nullptr;
 

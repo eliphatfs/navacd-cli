@@ -322,9 +322,7 @@ struct TTriangle3
 };
 
 typedef TTriangle3<float> FTriangle3f;
-#ifndef NAVACD_SHIM_TYPES_PROVIDED
 typedef TTriangle3<double> FTriangle3d;
-#endif
 typedef TTriangle3<int> FTriangle3i;
 
 

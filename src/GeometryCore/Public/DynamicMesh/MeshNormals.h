@@ -10,7 +10,10 @@
 #include "Math/UnrealMathSSE.h"
 #include "Math/Vector.h"
 
-template <typename FuncType> class TFunctionRef;
+// NavACD standalone: TFunctionRef is an alias template provided by the shim.
+// The original forward-declaration here (as a class template) conflicts and
+// is removed.
+// template <typename FuncType> class TFunctionRef;
 
 namespace UE
 {

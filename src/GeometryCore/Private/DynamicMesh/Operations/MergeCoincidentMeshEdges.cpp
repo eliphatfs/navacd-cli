@@ -2,9 +2,7 @@
 
 
 #include "DynamicMesh/Operations/MergeCoincidentMeshEdges.h"
-#include "DynamicMesh/Operations/SplitAttributeWelder.h"
 #include "DynamicMesh/DynamicMesh3.h"
-#include "DynamicMesh/MeshAdapterUtil.h"
 #include "Spatial/PointHashGrid3.h"
 #include "Util/IndexPriorityQueue.h"
 #include "Util/IndexUtil.h"
@@ -194,12 +192,7 @@ bool FMergeCoincidentMeshEdges::Apply()
 					EquivalenceSets[other_eid] = nullptr;
 					RemainingEdges.Remove(other_eid);
 
-					// weld attributes 
-					if (bWeldAttrsOnMergedEdges)
-					{ 
-						SplitAttributeWelder.WeldSplitElements(*Mesh, MergeInfo.KeptVerts[0]);
-						SplitAttributeWelder.WeldSplitElements(*Mesh, MergeInfo.KeptVerts[1]);
-					}
+					// NavACD standalone: SplitAttributeWelder is stripped; no attribute welding on merged edges.
 				}
 			}
 		}
